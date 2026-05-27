@@ -1,0 +1,10 @@
+services:
+  postgres-db:
+    image: postgres:16.3-bullseye
+    container_name: postgres-cont
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: job_spring_db
+      POSTGRES_USER: jobspring
+      POSTGRES_PASSWORD: jobspring@123
