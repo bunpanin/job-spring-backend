@@ -18,7 +18,62 @@ public class KeycloakUserService {
 
     private final String realm = "job-spring";
 
-    public void registerCandidate(RegisterCandidateRequest request) {
+    public boolean isEmailVerified(String email) {
+        List<UserRepresentation> users = keycloak.realm(realm)
+                .users()
+                .searchByEmail(email, true);
+
+        if (users.isEmpty()) {
+            throw new RuntimeException("User not found");
+        }
+
+        UserRepresentation user = users.get(0);
+
+        return Boolean.TRUE.equals(user.isEmailVerified());
+    }
+
+    public void resendVerificationEmail(String email) {
+        List<UserRepresentation> users = keycloak.realm(realm)
+                .users()
+                .searchByEmail(email, true);
+
+        if (users.isEmpty()) {
+            throw new RuntimeException("User not found");
+        }
+
+        UserRepresentation user = users.get(0);
+
+        if (Boolean.TRUE.equals(user.isEmailVerified())) {
+            throw new RuntimeException("Email is already verified");
+        }
+
+        keycloak.realm(realm)
+                .users()
+                .get(user.getId())
+                .sendVerifyEmail();
+    }
+
+    public String registerCandidate(RegisterCandidateRequest request) {
+
+        List<UserRepresentation> existingUsers = keycloak.realm(realm)
+                .users()
+                .searchByEmail(request.getEmail(), true);
+
+        if (!existingUsers.isEmpty()) {
+            UserRepresentation existingUser = existingUsers.get(0);
+
+            if (!Boolean.TRUE.equals(existingUser.isEmailVerified())) {
+                keycloak.realm(realm)
+                        .users()
+                        .get(existingUser.getId())
+                        .sendVerifyEmail();
+
+                return "This email is already registered but not verified. We sent verification email again.";
+            }
+
+            throw new RuntimeException("This email is already registered. Please login.");
+        }
+
         UserRepresentation user = new UserRepresentation();
 
         user.setEnabled(true);
@@ -50,6 +105,8 @@ public class KeycloakUserService {
                 .users()
                 .get(userId)
                 .sendVerifyEmail();
+
+        return "Register successful. Please check your email to verify account.";
     }
 
     private void assignCandidateRole(String userId) {
