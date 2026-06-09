@@ -16,12 +16,12 @@ public class ApiException {
 
     @ExceptionHandler(ResponseStatusException.class)
     ResponseEntity<?> handleResponseStatusException(ResponseStatusException e){
-        ErrorDetailRespone<?> errorDetailRespone = ErrorDetailRespone.builder()
+        ErrorDetailResponse<?> errorDetailResponse = ErrorDetailResponse.builder()
             .code(e.getStatusCode().toString())
             .description(e.getReason())
             .build();
-        return new ResponseEntity<>(ErrorRespone.builder()
-            .error(errorDetailRespone)
+        return new ResponseEntity<>(ErrorResponse.builder()
+            .error(errorDetailResponse)
             .build(),
             e.getStatusCode()
         );
@@ -29,7 +29,7 @@ public class ApiException {
     
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    ErrorRespone<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException e){
+    ErrorResponse<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException e){
         List<Map<String,String>> errorDetail = new ArrayList<>();
         e.getFieldErrors()
             .forEach(
@@ -41,13 +41,13 @@ public class ApiException {
                 }
             );
 
-        ErrorDetailRespone<?> errorDetailRespone = ErrorDetailRespone.builder()
+        ErrorDetailResponse<?> errorDetailResponse = ErrorDetailResponse.builder()
             .code(HttpStatus.BAD_REQUEST.getReasonPhrase())
             .description(errorDetail)
             .build();
 
-        return ErrorRespone.builder()
-            .error(errorDetailRespone)
+        return ErrorResponse.builder()
+            .error(errorDetailResponse)
             .build();
     }
     

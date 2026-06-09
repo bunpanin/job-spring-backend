@@ -6,7 +6,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class ErrorDetailRespone<T> {
+public class ErrorDetailResponse<T> {
     private String code;
     private T description;
 }

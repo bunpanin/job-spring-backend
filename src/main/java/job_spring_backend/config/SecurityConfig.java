@@ -82,6 +82,7 @@ public class SecurityConfig {
     private Converter<Jwt, AbstractAuthenticationToken> jwtAuthenticationConverter() {
         return jwt -> {
             Collection<GrantedAuthority> authorities = extractAuthorities(jwt);
+            System.out.println("authorities: " + authorities);
             return new JwtAuthenticationToken(jwt, authorities);
         };
     }
@@ -103,5 +104,6 @@ public class SecurityConfig {
                 .map(Object::toString)
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                 .collect(Collectors.toSet());
+
     }
 }

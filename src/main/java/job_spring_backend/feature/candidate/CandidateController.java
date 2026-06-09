@@ -1,7 +1,9 @@
 package job_spring_backend.feature.candidate;
-import job_spring_backend.feature.candidate.dto.CandidateProfileResponse;
-import job_spring_backend.feature.candidate.dto.UpdateCandidateProfileRequest;
+import jakarta.validation.Valid;
+import job_spring_backend.domain.Candidate;
+import job_spring_backend.feature.candidate.dto.request.CandidateProfileRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -13,16 +15,22 @@ public class CandidateController {
 
     private final CandidateService candidateService;
 
-    @GetMapping("/me")
-    public CandidateProfileResponse getMyProfile(@AuthenticationPrincipal Jwt jwt) {
-        return candidateService.getOrCreateProfile(jwt);
+    @PostMapping
+    public ResponseEntity<?> createCandidateProfile(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody CandidateProfileRequest request
+    ) {
+        Candidate candidate = candidateService.createCandidateProfile(jwt, request);
+
+        return ResponseEntity.ok(candidate);
     }
 
-    @PutMapping("/me")
-    public CandidateProfileResponse updateMyProfile(
-            @AuthenticationPrincipal Jwt jwt,
-            @RequestBody UpdateCandidateProfileRequest request
+    @GetMapping("/me")
+    public ResponseEntity<?> getMyProfile(
+            @AuthenticationPrincipal Jwt jwt
     ) {
-        return candidateService.updateProfile(jwt, request);
+        Candidate candidate = candidateService.getMyCandidateProfile(jwt);
+
+        return ResponseEntity.ok(candidate);
     }
 }

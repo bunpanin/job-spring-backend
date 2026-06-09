@@ -2,10 +2,14 @@ package job_spring_backend.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
-
 @Entity
-@Table(name = "candidates")
+@Table(
+        name = "candidates",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = "keycloak_user_id"),
+                @UniqueConstraint(columnNames = "email")
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,33 +24,18 @@ public class Candidate {
     @Column(name = "keycloak_user_id", nullable = false, unique = true)
     private String keycloakUserId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
 
     private String fullName;
 
     private String phone;
 
-    private String location;
+    private String gender;
 
-    private String currentPosition;
+    private String address;
 
-    private Double expectedSalary;
+    private String resumeUrl;
 
-    private String profilePhotoUrl;
-
-    private LocalDateTime createdAt;
-
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    public void beforeCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    public void beforeUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
+    private String status;
 }
