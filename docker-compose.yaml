@@ -1,29 +1,23 @@
 services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: jobspring-app
-    ports:
-      - "9090:9090"
-    environment:
-      SERVER_PORT: 9090
-
-      SPRING_DATASOURCE_URL: jdbc:postgresql://jobspring-db:5432/jobspring
-      SPRING_DATASOURCE_USERNAME: jobspring
-      SPRING_DATASOURCE_PASSWORD: jobspring123
-
-      # If your Spring Security uses issuer-uri
-      # Be careful: browser uses localhost, container uses keycloak
-#      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/job-spring
-
-    depends_on:
-      jobspring-db:
-        condition: service_healthy
-      keycloak:
-        condition: service_started
-    restart: unless-stopped
-
+#  app:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    container_name: jobspring-app
+#    ports:
+#      - "9090:9090"
+#    environment:
+#      SERVER_PORT: 9090
+#
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://jobspring-db:5432/jobspring
+#      SPRING_DATASOURCE_USERNAME: jobspring
+#      SPRING_DATASOURCE_PASSWORD: jobspring123
+#      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8080/realms/job-spring
+#      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/job-spring/protocol/openid-connect/certs
+#    depends_on:
+#      - jobspring-db
+#    networks:
+#      - job-spring-net
   jobspring-db:
     image: postgres:16
     container_name: jobspring-db
@@ -35,13 +29,8 @@ services:
       - "5433:5432"
     volumes:
       - jobspring_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U jobspring -d jobspring"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
+    networks:
+      - job-spring-net
   keycloak-db:
     image: postgres:16
     container_name: keycloak-db
@@ -53,12 +42,8 @@ services:
       - "5432:5432"
     volumes:
       - keycloak_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
+    networks:
+      - job-spring-net
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
@@ -80,10 +65,13 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      keycloak-db:
-        condition: service_healthy
-    restart: unless-stopped
+      - keycloak-db
+    networks:
+      - job-spring-net
 
 volumes:
   jobspring_data:
   keycloak_data:
+networks:
+  job-spring-net:
+    driver: bridge
