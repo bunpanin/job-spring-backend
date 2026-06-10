@@ -1,4 +1,29 @@
 services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jobspring-app
+    ports:
+      - "9090:9090"
+    environment:
+      SERVER_PORT: 9090
+
+      SPRING_DATASOURCE_URL: jdbc:postgresql://jobspring-db:5432/jobspring
+      SPRING_DATASOURCE_USERNAME: jobspring
+      SPRING_DATASOURCE_PASSWORD: jobspring123
+
+      # If your Spring Security uses issuer-uri
+      # Be careful: browser uses localhost, container uses keycloak
+#      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/job-spring
+
+    depends_on:
+      jobspring-db:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    restart: unless-stopped
+
   jobspring-db:
     image: postgres:16
     container_name: jobspring-db
@@ -10,6 +35,12 @@ services:
       - "5433:5432"
     volumes:
       - jobspring_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jobspring -d jobspring"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
   keycloak-db:
     image: postgres:16
@@ -22,6 +53,12 @@ services:
       - "5432:5432"
     volumes:
       - keycloak_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
@@ -30,15 +67,22 @@ services:
     environment:
       KC_DB: postgres
       KC_DB_URL_HOST: keycloak-db
+      KC_DB_URL_PORT: 5432
       KC_DB_URL_DATABASE: keycloak
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: keycloak123
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin123
+
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin123
+
+      KC_HOSTNAME_STRICT: false
+      KC_HTTP_ENABLED: true
     ports:
       - "8080:8080"
     depends_on:
-      - keycloak-db
+      keycloak-db:
+        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   jobspring_data:
