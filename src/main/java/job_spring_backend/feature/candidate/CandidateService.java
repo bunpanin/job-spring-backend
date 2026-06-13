@@ -3,9 +3,11 @@ package job_spring_backend.feature.candidate;
 import job_spring_backend.domain.Candidate;
 import job_spring_backend.feature.candidate.dto.request.CandidateProfileRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -21,24 +23,35 @@ public class CandidateService {
         Boolean emailVerified = jwt.getClaimAsBoolean("email_verified");
 
         if (keycloakUserId == null || keycloakUserId.isBlank()) {
-            throw new RuntimeException("Invalid Keycloak user ID");
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Invalid Keycloak user ID");
         }
 
         if (email == null || email.isBlank()) {
-            throw new RuntimeException("Email not found in Keycloak token");
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Email not found in Keycloak token");
         }
 
-//        if (!Boolean.TRUE.equals(emailVerified)) {
-//            throw new RuntimeException("Please verify your email before creating candidate profile");
-//        }
-//
-//        if (candidateRepository.existsByKeycloakUserId(keycloakUserId)) {
-//            throw new RuntimeException("Candidate profile already exists for this user");
-//        }
-//
-//        if (candidateRepository.existsByEmail(email)) {
-//            throw new RuntimeException("Candidate email already exists");
-//        }
+        if (!Boolean.TRUE.equals(emailVerified)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Please verify your email before creating candidate profile");
+        }
+
+        if (candidateRepository.existsByKeycloakUserId(keycloakUserId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Candidate profile already exists for this user");
+        }
+
+        if (candidateRepository.existsByEmail(email)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Candidate email already exists"
+            );
+        }
 
         Candidate candidate = Candidate.builder()
                 .keycloakUserId(keycloakUserId)
