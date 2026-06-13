@@ -1,5 +1,22 @@
-FROM ghcr.io/graalvm/jdk-community:21 AS build
+# Build stage
+FROM eclipse-temurin:21-jdk AS build
 WORKDIR /app
-COPY --from=build /app/build/libs/job-spring-backend-0.0.1.jar /app/job-spring-backend.jar
+
+COPY gradlew .
+COPY gradle ./gradle
+COPY build.gradle .
+COPY settings.gradle .
+COPY src ./src
+
+RUN chmod +x ./gradlew
+RUN ./gradlew clean bootJar -x test --no-daemon
+
+# Run stage
+FROM ghcr.io/graalvm/jdk-community:21
+WORKDIR /app
+
+COPY --from=build /app/build/libs/*.jar app.jar
+
 EXPOSE 9090
-ENTRYPOINT ["java", "-jar", "/app/job-spring-backend.jar"]
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

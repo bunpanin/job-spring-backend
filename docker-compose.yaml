@@ -1,4 +1,32 @@
 services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jobspring-api
+    ports:
+      - "9090:9090"
+    environment:
+      SERVER_PORT: 9090
+
+      SPRING_DATASOURCE_URL: jdbc:postgresql://jobspring-db:5432/jobspring
+      SPRING_DATASOURCE_USERNAME: jobspring
+      SPRING_DATASOURCE_PASSWORD: jobspring123
+
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "true"
+
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8080/realms/job-spring
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/job-spring/protocol/openid-connect/certs
+    depends_on:
+      jobspring-db:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    networks:
+      - job-spring-net
+
   jobspring-db:
     image: postgres:16
     container_name: jobspring-db
@@ -10,6 +38,11 @@ services:
       - "5432:5432"
     volumes:
       - jobspring_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jobspring -d jobspring"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - job-spring-net
 
@@ -24,6 +57,11 @@ services:
       - "5433:5432"
     volumes:
       - keycloak_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - job-spring-net
 
@@ -45,7 +83,8 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - keycloak-db
+      keycloak-db:
+        condition: service_healthy
     networks:
       - job-spring-net
 
