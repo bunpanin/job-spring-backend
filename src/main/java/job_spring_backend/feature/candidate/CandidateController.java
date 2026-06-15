@@ -1,36 +1,55 @@
 package job_spring_backend.feature.candidate;
-import jakarta.validation.Valid;
-import job_spring_backend.domain.Candidate;
-import job_spring_backend.feature.candidate.dto.request.CandidateProfileRequest;
+import job_spring_backend.feature.candidate.dto.request.UpdateCandidateProfileRequest;
+import job_spring_backend.feature.candidate.dto.response.CandidateProfileResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/candidates")
+@RequestMapping("/api/v1/candidates")
 @RequiredArgsConstructor
 public class CandidateController {
 
     private final CandidateService candidateService;
 
-    @PostMapping
-    public ResponseEntity<?> createCandidateProfile(
-            @AuthenticationPrincipal Jwt jwt,
-            @Valid @RequestBody CandidateProfileRequest request
-    ) {
-        Candidate candidate = candidateService.createCandidateProfile(jwt, request);
-
-        return ResponseEntity.ok(candidate);
-    }
+//    @GetMapping("/me")
+//    public CandidateProfileResponse getMyProfile(
+//            @AuthenticationPrincipal Jwt jwt
+//    ) {
+//        return candidateService.getOrCreateProfile(jwt);
+//    }
+//
+//    @PutMapping("/me")
+//    public CandidateProfileResponse updateMyProfile(
+//            @AuthenticationPrincipal Jwt jwt,
+//            @RequestBody UpdateCandidateProfileRequest request
+//    ) {
+//        return candidateService.updateProfile(jwt, request);
+//    }
 
     @GetMapping("/me")
-    public ResponseEntity<?> getMyProfile(
+    public CandidateProfileResponse getMyProfile(
             @AuthenticationPrincipal Jwt jwt
     ) {
-        Candidate candidate = candidateService.getMyCandidateProfile(jwt);
-
-        return ResponseEntity.ok(candidate);
+        return candidateService.getMyProfile(jwt);
     }
+
+    @PostMapping("/me")
+    public CandidateProfileResponse createMyProfile(
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return candidateService.createMyProfile(jwt);
+    }
+
+    @PutMapping("/me")
+    public CandidateProfileResponse updateMyProfile(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestBody UpdateCandidateProfileRequest request
+    ) {
+        return candidateService.updateProfile(jwt, request);
+    }
+
+
+
 }

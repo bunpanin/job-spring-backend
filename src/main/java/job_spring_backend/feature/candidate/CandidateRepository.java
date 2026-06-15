@@ -11,4 +11,6 @@ public interface CandidateRepository extends JpaRepository<Candidate, Long> {
     boolean existsByEmail(String email);
 
     Optional<Candidate> findByKeycloakUserId(String keycloakUserId);
+
+    Optional<Candidate> findByEmail(String email);
 }

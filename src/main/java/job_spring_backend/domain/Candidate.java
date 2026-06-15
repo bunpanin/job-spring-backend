@@ -1,15 +1,12 @@
 package job_spring_backend.domain;
+
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
-@Table(
-        name = "candidates",
-        uniqueConstraints = {
-                @UniqueConstraint(columnNames = "keycloak_user_id"),
-                @UniqueConstraint(columnNames = "email")
-        }
-)
+@Table(name = "candidates")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -31,11 +28,29 @@ public class Candidate {
 
     private String phone;
 
-    private String gender;
+    private String location;
 
-    private String address;
+    private String currentPosition;
 
-    private String resumeUrl;
+    private Double expectedSalary;
 
-    private String status;
+    private String profilePhotoUrl;
+
+    @Column(columnDefinition = "TEXT")
+    private String summary;
+
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    public void beforeCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void beforeUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }
